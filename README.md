@@ -1,167 +1,269 @@
-# kickern.in 🏓
+# kickern.in - Kickertisch-Warteschlangen-Management
 
-Eine moderne Webanwendung für das Management von Warteschlangen an Kickertischen in Gaststätten und Bars.
+Eine moderne Web-Anwendung zur Verwaltung von Warteschlangen an Kickertischen in Gaststätten, Bars und anderen Locations.
 
-## 🎯 Überblick
+## 🎯 Features
 
-kickern.in ermöglicht es Gästen, sich digital in Warteschlangen für Kickertische einzutragen und die aktuelle Reihenfolge einzusehen. Die App ist speziell für den Einsatz auf Tablets am Tisch und mobile Geräte optimiert.
+- **Dynamische Warteschlangen**: Teams können sich selbst in die Warteschlange eintragen
+- **Manager-Modus**: Vollständige Kontrolle über die Warteschlange mit Authentication
+- **Gast-Ansicht**: Read-only Ansicht für externe Displays und Gäste
+- **Real-time Updates**: Automatische Synchronisation über alle Geräte via Firebase
+- **Quick-Add**: Die letzten 8 Teams werden gespeichert für schnelle Wiedereingabe
+- **Mobile-optimiert**: Responsive Design für Tablets und Smartphones
+- **Standort-basiert**: Dynamische URLs für verschiedene Standorte und Tische
 
-## ✨ Features
+## 🚀 Tech Stack
 
-- **Warteschlangen-Management**: Teams können sich einfach über ein Eingabefeld einreihen
-- **Quick-Add**: Die letzten 8 Teams werden gespeichert für schnelle Wiederauswahl
-- **Zwei Ansichten**:
-  - **Management-Ansicht**: Vollzugriff für Tablets am Tisch (mit Authentication)
-  - **Gast-Ansicht**: Schreibgeschützter Zugriff für externe Anzeigen und Handys
-- **Multi-Location Support**: Unterstützung für mehrere Standorte und Tische
-- **Real-time Updates**: Live-Synchronisation zwischen allen Geräten
-- **Mobile-optimiert**: Touch-freundliche Bedienung für Tablets und Smartphones
+- **Frontend**: [Astro](https://astro.build/) mit TypeScript
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Backend**: [Firebase](https://firebase.google.com/) (Firestore, Authentication)
+- **Deployment**: Optimiert für Vercel/Netlify
 
-## 🏗️ Tech Stack
+## 📋 Voraussetzungen
 
-- **Frontend**: [Astro](https://astro.build/) mit [Tailwind CSS](https://tailwindcss.com/)
-- **Backend**: [Firebase](https://firebase.google.com/) (Firestore + Authentication)
-- **Deployment**: Vorbereitet für Vercel/Netlify
+- Node.js 18+ und npm
+- Ein Firebase-Projekt (kostenloser Plan reicht aus)
+- Optional: Vercel oder Netlify Account für Deployment
 
-## 📱 URL-Struktur
+## 🛠️ Installation
 
+### 1. Repository klonen
+
+```bash
+git clone https://github.com/yourusername/kickern.in.git
+cd kickern.in
 ```
-kickern.in/                          # Startseite mit Standort-Übersicht
-kickern.in/[standort]/[tisch]        # Tisch-spezifische Ansicht
+
+### 2. Abhängigkeiten installieren
+
+```bash
+npm install
 ```
 
-**Beispiele:**
-- `kickern.in/platzwart/1` - Platzwart, Tisch 1
-- `kickern.in/platzwart/leo` - Platzwart, Tisch "Leo"
-- `kickern.in/sportsbar/soccer` - Sportsbar, Tisch "Soccer"
+### 3. Firebase-Projekt einrichten
 
-## 🚀 Installation
+1. Gehe zu [Firebase Console](https://console.firebase.google.com/)
+2. Erstelle ein neues Projekt oder wähle ein bestehendes
+3. Aktiviere **Firestore Database**:
+   - Navigiere zu "Firestore Database" im Menü
+   - Klicke auf "Datenbank erstellen"
+   - Wähle "Production Mode" oder "Test Mode" für Entwicklung
+   - Wähle eine Region (z.B. europe-west3 für Frankfurt)
 
-### Voraussetzungen
-- Node.js (v18 oder höher)
-- Firebase Account
+4. Aktiviere **Authentication** (optional, für Manager-Modus):
+   - Navigiere zu "Authentication" im Menü
+   - Klicke auf "Erste Schritte"
+   - Aktiviere "E-Mail/Passwort" als Anmeldeverfahren
 
-### Setup
+5. Firebase-Konfiguration abrufen:
+   - Gehe zu Projekteinstellungen (Zahnrad-Icon)
+   - Scrolle zu "Deine Apps" und klicke auf "Web-App hinzufügen"
+   - Registriere die App mit einem Namen
+   - Kopiere die Konfigurationswerte
 
-1. **Repository klonen**
-   ```bash
-   git clone https://github.com/yourusername/kickern.in.git
-   cd kickern.in
-   ```
+### 4. Umgebungsvariablen konfigurieren
 
-2. **Dependencies installieren**
-   ```bash
-   npm install
-   ```
+1. Kopiere `.env.example` zu `.env`:
 
-3. **Firebase konfigurieren**
-   ```bash
-   # Firebase CLI installieren (falls noch nicht vorhanden)
-   npm install -g firebase-tools
-   
-   # Firebase Login
-   firebase login
-   
-   # Firebase Projekt initialisieren
-   firebase init
-   ```
+```bash
+cp .env.example .env
+```
 
-4. **Environment Variables setzen**
-   ```bash
-   cp .env.example .env.local
-   # Firebase Konfiguration in .env.local eintragen
-   ```
+2. Füge deine Firebase-Konfiguration in `.env` ein:
 
-5. **Development Server starten**
-   ```bash
-   npm run dev
-   ```
+```env
+PUBLIC_FIREBASE_API_KEY=dein-api-key
+PUBLIC_FIREBASE_AUTH_DOMAIN=dein-projekt.firebaseapp.com
+PUBLIC_FIREBASE_PROJECT_ID=dein-projekt-id
+PUBLIC_FIREBASE_STORAGE_BUCKET=dein-projekt.appspot.com
+PUBLIC_FIREBASE_MESSAGING_SENDER_ID=deine-sender-id
+PUBLIC_FIREBASE_APP_ID=deine-app-id
+```
 
-## 🏗️ Datenmodell
+### 5. Firestore Security Rules
 
-### Firestore Collections
+Füge diese Rules in der Firebase Console unter Firestore > Rules ein:
 
 ```javascript
-// /queues/{standort}_{tisch}
-{
-  currentQueue: ["Team Alpha", "Team Beta", "Team Gamma"],
-  lastActivity: Timestamp,
-  recentTeams: ["Team Alpha", "Team Beta", "Team Charlie", ...], // Letzte 8 Teams
-  standort: "platzwart",
-  tisch: "1"
-}
-
-// /locations/{standort}
-{
-  name: "Platzwart",
-  lastActivity: Timestamp,
-  activeTables: ["1", "leo", "soccer"]
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Queues: Lesen für alle, Schreiben nur mit Auth oder für neue Teams
+    match /queues/{queueId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true; // Für Demo - später mit Auth einschränken
+      allow delete: if request.auth != null;
+    }
+    
+    // Locations: Lesen für alle, automatisch durch Queue-Updates verwaltet
+    match /locations/{locationId} {
+      allow read: if true;
+      allow write: if true; // Automatisch durch App verwaltet
+    }
+  }
 }
 ```
 
-## 🎮 Verwendung
+## 🎮 Entwicklung
 
-### Für Gäste (Tablet am Tisch)
-1. Firebase Authentication durchführen
-2. Team-Name eingeben oder aus den letzten 8 Teams auswählen
-3. Nach dem Spiel: Verlierer-Team entfernen, nächstes Team aktivieren
+### Lokaler Entwicklungsserver
 
-### Für Zuschauer (Handy/externe Displays)
-1. Startseite besuchen für Standort-Übersicht
-2. Gewünschten Tisch auswählen
-3. Aktuelle Warteschlange einsehen (nur Lesezugriff)
+```bash
+npm run dev
+```
 
-## 📦 Deployment
+Die App läuft dann unter `http://localhost:4321`
+
+### Build für Production
+
+```bash
+npm run build
+```
+
+### Vorschau des Production-Builds
+
+```bash
+npm run preview
+```
+
+## 📱 Verwendung
+
+### Basis-URLs
+
+- **Startseite**: `kickern.in/` - Übersicht aller aktiven Standorte
+- **Warteschlange**: `kickern.in/[standort]/[tisch]` - Gast-Ansicht
+- **Manager-Modus**: `kickern.in/[standort]/[tisch]?manage=true` - Mit Verwaltungsfunktionen
+
+### Beispiele
+
+- `kickern.in/biergarten-muenchen/tisch-1` - Gast-Ansicht für Tisch 1 im Biergarten München
+- `kickern.in/sports-bar-berlin/haupttisch?manage=true` - Manager-Ansicht
+
+### Features im Detail
+
+#### Für Spieler
+- Team-Name eingeben und zur Warteschlange hinzufügen
+- Position in der Warteschlange sehen
+- Geschätzte Wartezeit anzeigen
+- Quick-Add Buttons für wiederkehrende Teams
+
+#### Für Manager
+- Vollständige Kontrolle über die Warteschlange
+- Teams hinzufügen/entfernen
+- Spielergebnisse markieren (Verlierer wird automatisch entfernt)
+- Warteschlange komplett leeren
+- Optional: Authentication für Zugriffskontrolle
+
+## 🚀 Deployment
 
 ### Vercel
+
+1. Installiere Vercel CLI:
 ```bash
-npm run build
-vercel --prod
+npm i -g vercel
 ```
+
+2. Deploy:
+```bash
+vercel
+```
+
+3. Umgebungsvariablen in Vercel Dashboard hinzufügen
 
 ### Netlify
+
+1. Build-Befehl: `npm run build`
+2. Publish-Verzeichnis: `dist`
+3. Umgebungsvariablen im Netlify Dashboard hinzufügen
+
+### Manuelles Deployment
+
 ```bash
 npm run build
-# Netlify CLI oder Web-Interface verwenden
+# Upload den 'dist' Ordner zu deinem Hosting-Provider
 ```
 
-## 🔧 Entwicklung
+## 🔧 Konfiguration
 
-### Verfügbare Scripts
-```bash
-npm run dev          # Development server
-npm run build        # Production build
-npm run preview      # Preview production build
-npm run astro        # Astro CLI
+### Authentication aktivieren
+
+Standardmäßig ist die Authentication im Manager-Modus deaktiviert. Um sie zu aktivieren:
+
+1. In `src/components/QueueManager.astro`, ändere:
+```javascript
+const checkAuth = () => {
+  // return true; // Demo-Modus
+  return isAuthenticated(); // Auth aktivieren
+};
 ```
 
-### Projektstruktur
+2. Erstelle Manager-Accounts in Firebase Console unter Authentication
+
+### Anpassungen
+
+- **Farben/Design**: Bearbeite Tailwind-Klassen in den Komponenten
+- **Wartezeit-Schätzung**: Passe den Multiplikator in `QueueViewer.astro` an
+- **Team-Limit**: Ändere die max. Anzahl in `queueService.ts`
+
+## 📝 Projektstruktur
+
 ```
-src/
-├── components/      # Wiederverwendbare Komponenten
-├── layouts/         # Layout-Templates
-├── pages/           # Astro-Seiten (Auto-Routing)
-├── styles/          # Globale Styles
-├── lib/            # Utility-Funktionen
-└── firebase/       # Firebase-Konfiguration
+kickern.in/
+├── src/
+│   ├── components/        # Astro-Komponenten
+│   │   ├── QueueManager.astro
+│   │   └── QueueViewer.astro
+│   ├── layouts/           # Layout-Templates
+│   │   └── Layout.astro
+│   ├── lib/              # Business Logic
+│   │   ├── firebase.ts   # Firebase-Konfiguration
+│   │   ├── queueService.ts # Warteschlangen-Verwaltung
+│   │   └── authService.ts  # Authentication
+│   ├── pages/            # Routen
+│   │   ├── index.astro   # Startseite
+│   │   └── [standort]/
+│   │       └── [tisch].astro # Dynamische Routen
+│   ├── styles/           # Globale Styles
+│   │   └── global.css
+│   └── types/            # TypeScript Definitionen
+│       └── index.ts
+├── public/               # Statische Assets
+├── .env.example         # Beispiel-Umgebungsvariablen
+├── astro.config.mjs     # Astro-Konfiguration
+├── package.json
+├── tsconfig.json
+└── README.md
 ```
 
-## 🤝 Contributing
+## 🐛 Troubleshooting
 
-1. Fork das Repository
-2. Feature Branch erstellen (`git checkout -b feature/amazing-feature`)
-3. Changes committen (`git commit -m 'Add amazing feature'`)
-4. Branch pushen (`git push origin feature/amazing-feature`)
-5. Pull Request erstellen
+### Firebase-Verbindungsfehler
+- Prüfe, ob alle Umgebungsvariablen korrekt gesetzt sind
+- Stelle sicher, dass Firestore in deinem Firebase-Projekt aktiviert ist
+- Überprüfe die Security Rules
+
+### Build-Fehler
+- Lösche `node_modules` und `package-lock.json`, dann `npm install`
+- Stelle sicher, dass Node.js 18+ installiert ist
+
+### Real-time Updates funktionieren nicht
+- Prüfe die Browser-Konsole auf Fehler
+- Stelle sicher, dass WebSockets nicht blockiert werden
+- Überprüfe Firestore-Berechtigungen
 
 ## 📄 Lizenz
 
-Dieses Projekt steht unter der MIT Lizenz - siehe [LICENSE](LICENSE) Datei für Details.
+MIT
 
-## 📞 Support
+## 🤝 Contributing
 
-Bei Fragen oder Problemen, bitte ein Issue erstellen oder kontaktiere [deine-email@domain.com](mailto:deine-email@domain.com).
+Pull Requests sind willkommen! Für größere Änderungen, bitte erst ein Issue erstellen.
+
+## 📧 Support
+
+Bei Fragen oder Problemen, erstelle ein Issue auf GitHub oder kontaktiere uns.
 
 ---
 
-Entwickelt mit ❤️ für die Kickergemeinschaft
+**Happy Kicking! ⚽**
