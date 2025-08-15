@@ -155,320 +155,327 @@ const { standort, tisch } = Astro.props;
   import { login, onAuthChange, isAuthenticated } from '../lib/authService';
   import type { QueueData, AuthUser } from '../types';
 
-  // Element-Referenzen
-  const managerEl = document.getElementById('queueManager') as HTMLElement;
-  const standort = managerEl.dataset.standort!;
-  const tisch = managerEl.dataset.tisch!;
-  
-  const addTeamForm = document.getElementById('addTeamForm') as HTMLFormElement;
-  const teamNameInput = document.getElementById('teamName') as HTMLInputElement;
-  const queueListEl = document.getElementById('queueList') as HTMLElement;
-  const recentTeamsEl = document.getElementById('recentTeams') as HTMLElement;
-  const currentGameEl = document.getElementById('currentGame') as HTMLElement;
-  const clearQueueBtn = document.getElementById('clearQueueBtn') as HTMLButtonElement;
-  
-  // Auth Elements
-  const authSection = document.getElementById('authSection') as HTMLElement;
-  const loginBtn = document.getElementById('loginBtn') as HTMLButtonElement;
-  const loginModal = document.getElementById('loginModal') as HTMLElement;
-  const loginForm = document.getElementById('loginForm') as HTMLFormElement;
-  const closeModalBtn = document.getElementById('closeModalBtn') as HTMLButtonElement;
-  const loginError = document.getElementById('loginError') as HTMLElement;
+  const isManageMode = new URLSearchParams(window.location.search).has('manage');
 
-  let currentQueue: QueueData | null = null;
-  let currentUser: AuthUser | null = null;
-  let unsubscribe: (() => void) | null = null;
-
-  // Authentication prüfen
-  const checkAuth = () => {
-    // Für Demo-Zwecke: Auth überspringen
-    return true;
-    // return isAuthenticated();
-  };
-
-  // Login Modal Handler
-  loginBtn?.addEventListener('click', () => {
-    loginModal.classList.remove('hidden');
-    loginModal.classList.add('flex');
-  });
-
-  closeModalBtn?.addEventListener('click', () => {
-    loginModal.classList.add('hidden');
-    loginModal.classList.remove('flex');
-  });
-
-  loginForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = (document.getElementById('email') as HTMLInputElement).value;
-    const password = (document.getElementById('password') as HTMLInputElement).value;
+  if (isManageMode) {
+    // Element-Referenzen und Slug-Fallback
+    const managerEl = document.getElementById('queueManager') as HTMLElement;
+    const segments = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/');
+    const fallbackStandort = decodeURIComponent(segments[0] || '');
+    const fallbackTisch = decodeURIComponent(segments[1] || '');
+    const standort = (managerEl.dataset.standort || fallbackStandort) as string;
+    const tisch = (managerEl.dataset.tisch || fallbackTisch) as string;
     
-    try {
-      await login(email, password);
+    const addTeamForm = document.getElementById('addTeamForm') as HTMLFormElement;
+    const teamNameInput = document.getElementById('teamName') as HTMLInputElement;
+    const queueListEl = document.getElementById('queueList') as HTMLElement;
+    const recentTeamsEl = document.getElementById('recentTeams') as HTMLElement;
+    const currentGameEl = document.getElementById('currentGame') as HTMLElement;
+    const clearQueueBtn = document.getElementById('clearQueueBtn') as HTMLButtonElement;
+    
+    // Auth Elements
+    const authSection = document.getElementById('authSection') as HTMLElement;
+    const loginBtn = document.getElementById('loginBtn') as HTMLButtonElement;
+    const loginModal = document.getElementById('loginModal') as HTMLElement;
+    const loginForm = document.getElementById('loginForm') as HTMLFormElement;
+    const closeModalBtn = document.getElementById('closeModalBtn') as HTMLButtonElement;
+    const loginError = document.getElementById('loginError') as HTMLElement;
+
+    let currentQueue: QueueData | null = null;
+    let currentUser: AuthUser | null = null;
+    let unsubscribe: (() => void) | null = null;
+
+    // Authentication prüfen
+    const checkAuth = () => {
+      // Für Demo-Zwecke: Auth überspringen
+      return true;
+      // return isAuthenticated();
+    };
+
+    // Login Modal Handler
+    loginBtn?.addEventListener('click', () => {
+      loginModal.classList.remove('hidden');
+      loginModal.classList.add('flex');
+    });
+
+    closeModalBtn?.addEventListener('click', () => {
       loginModal.classList.add('hidden');
       loginModal.classList.remove('flex');
-      authSection.classList.add('hidden');
-      initQueue();
-    } catch (error: any) {
-      loginError.textContent = error.message || 'Anmeldung fehlgeschlagen';
-      loginError.classList.remove('hidden');
-    }
-  });
+    });
 
-  // Queue initialisieren
-  const initQueue = async () => {
-    try {
-      // Queue erstellen/abrufen
-      currentQueue = await getOrCreateQueue(standort, tisch);
+    loginForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = (document.getElementById('email') as HTMLInputElement).value;
+      const password = (document.getElementById('password') as HTMLInputElement).value;
       
-      // Real-time Updates abonnieren
-      if (unsubscribe) unsubscribe();
-      unsubscribe = subscribeToQueue(standort, tisch, (queue) => {
-        if (queue) {
-          currentQueue = queue;
-          updateUI();
-        }
-      });
-      
-      updateUI();
-    } catch (error) {
-      console.error('Fehler beim Initialisieren der Queue:', error);
-      // Fallback zu lokaler Simulation
-      currentQueue = {
-        currentQueue: [],
-        recentTeams: [],
-        lastActivity: new Date(),
-        standort,
-        tisch
-      };
-      updateUI();
-    }
-  };
+      try {
+        await login(email, password);
+        loginModal.classList.add('hidden');
+        loginModal.classList.remove('flex');
+        authSection.classList.add('hidden');
+        initQueue();
+      } catch (error: any) {
+        loginError.textContent = error.message || 'Anmeldung fehlgeschlagen';
+        loginError.classList.remove('hidden');
+      }
+    });
 
-  // UI aktualisieren
-  const updateUI = () => {
-    if (!currentQueue) return;
-    
-    // Recent Teams
-    if (currentQueue.recentTeams.length > 0) {
-      recentTeamsEl.innerHTML = currentQueue.recentTeams.map(team => `
-        <button
-          class="quick-add-btn bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-2 rounded-lg font-medium transition text-sm"
-          data-team="${team}"
-        >
-          ${team}
-        </button>
-      `).join('');
-      
-      // Event Listener für Quick-Add Buttons
-      document.querySelectorAll('.quick-add-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const team = (e.target as HTMLElement).dataset.team!;
-          await handleAddTeam(team);
+    // Queue initialisieren
+    const initQueue = async () => {
+      try {
+        // Queue erstellen/abrufen
+        currentQueue = await getOrCreateQueue(standort, tisch);
+        
+        // Real-time Updates abonnieren
+        if (unsubscribe) unsubscribe();
+        unsubscribe = subscribeToQueue(standort, tisch, (queue) => {
+          if (queue) {
+            currentQueue = queue;
+            updateUI();
+          }
         });
-      });
-    }
-    
-    // Queue Liste
-    if (currentQueue.currentQueue.length > 0) {
-      queueListEl.innerHTML = currentQueue.currentQueue.map((team, index) => {
-        const isPlaying = index < 2;
-        return `
-          <div class="flex items-center justify-between p-4 rounded-lg ${
-            isPlaying 
-              ? 'bg-green-100 dark:bg-green-900 border-2 border-green-500' 
-              : 'bg-gray-100 dark:bg-gray-700'
-          }">
-            <div class="flex items-center gap-3">
-              <span class="text-2xl font-bold ${
-                isPlaying 
-                  ? 'text-green-700 dark:text-green-300' 
-                  : 'text-gray-600 dark:text-gray-400'
-              }">
-                ${index + 1}
-              </span>
-              <span class="text-lg font-medium text-gray-900 dark:text-white">
-                ${team}
-              </span>
-              ${isPlaying ? `
-                <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                  SPIELT
+        
+        updateUI();
+      } catch (error) {
+        console.error('Fehler beim Initialisieren der Queue:', error);
+        // Fallback zu lokaler Simulation
+        currentQueue = {
+          currentQueue: [],
+          recentTeams: [],
+          lastActivity: new Date(),
+          standort,
+          tisch
+        };
+        updateUI();
+      }
+    };
+
+    // UI aktualisieren
+    const updateUI = () => {
+      if (!currentQueue) return;
+      
+      // Recent Teams
+      if (currentQueue.recentTeams.length > 0) {
+        recentTeamsEl.innerHTML = currentQueue.recentTeams.map(team => `
+          <button
+            class="quick-add-btn bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-2 rounded-lg font-medium transition text-sm"
+            data-team="${team}"
+          >
+            ${team}
+          </button>
+        `).join('');
+        
+        // Event Listener für Quick-Add Buttons
+        document.querySelectorAll('.quick-add-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const team = (e.target as HTMLElement).dataset.team!;
+            await handleAddTeam(team);
+          });
+        });
+      }
+      
+      // Queue Liste
+      if (currentQueue.currentQueue.length > 0) {
+        queueListEl.innerHTML = currentQueue.currentQueue.map((team, index) => {
+          const isPlaying = index < 2;
+          return `
+            <div class="flex items-center justify-between p-4 rounded-lg ${
+              isPlaying 
+                ? 'bg-green-100 dark:bg-green-900 border-2 border-green-500' 
+                : 'bg-gray-100 dark:bg-gray-700'
+            }">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl font-bold ${
+                  isPlaying 
+                    ? 'text-green-700 dark:text-green-300' 
+                    : 'text-gray-600 dark:text-gray-400'
+                }">
+                  ${index + 1}
                 </span>
-              ` : ''}
+                <span class="text-lg font-medium text-gray-900 dark:text-white">
+                  ${team}
+                </span>
+                ${isPlaying ? `
+                  <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                    SPIELT
+                  </span>
+                ` : ''}
+              </div>
+              <button
+                class="remove-team-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                data-team="${team}"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
             </div>
+          `;
+        }).join('');
+        
+        // Event Listener für Remove Buttons
+        document.querySelectorAll('.remove-team-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const team = (e.currentTarget as HTMLElement).dataset.team!;
+            await handleRemoveTeam(team);
+          });
+        });
+      } else {
+        queueListEl.innerHTML = `
+          <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+            <p>Warteschlange ist leer</p>
+            <p class="text-sm mt-2">Füge Teams hinzu, um zu starten</p>
+          </div>
+        `;
+      }
+      
+      // Aktuelles Spiel
+      if (currentQueue.currentQueue.length >= 2) {
+        const team1 = currentQueue.currentQueue[0];
+        const team2 = currentQueue.currentQueue[1];
+        const nextTeam = currentQueue.currentQueue[2];
+        
+        currentGameEl.innerHTML = `
+          <div class="grid grid-cols-2 gap-4">
+            <div class="text-center p-4 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Team 1</p>
+              <p class="text-xl font-bold text-gray-900 dark:text-white">${team1}</p>
+            </div>
+            <div class="text-center p-4 bg-red-100 dark:bg-red-900 rounded-lg">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Team 2</p>
+              <p class="text-xl font-bold text-gray-900 dark:text-white">${team2}</p>
+            </div>
+          </div>
+          
+          ${nextTeam ? `
+            <div class="text-center text-sm text-gray-600 dark:text-gray-400">
+              Nächstes Team: <span class="font-medium text-gray-900 dark:text-white">${nextTeam}</span>
+            </div>
+          ` : ''}
+          
+          <div class="flex gap-3 mt-4">
             <button
-              class="remove-team-btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-              data-team="${team}"
+              class="winner-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
+              data-loser="${team2}"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
+              ${team1} gewinnt
+            </button>
+            <button
+              class="winner-btn flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition"
+              data-loser="${team1}"
+            >
+              ${team2} gewinnt
             </button>
           </div>
         `;
-      }).join('');
-      
-      // Event Listener für Remove Buttons
-      document.querySelectorAll('.remove-team-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const team = (e.currentTarget as HTMLElement).dataset.team!;
-          await handleRemoveTeam(team);
-        });
-      });
-    } else {
-      queueListEl.innerHTML = `
-        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-          <p>Warteschlange ist leer</p>
-          <p class="text-sm mt-2">Füge Teams hinzu, um zu starten</p>
-        </div>
-      `;
-    }
-    
-    // Aktuelles Spiel
-    if (currentQueue.currentQueue.length >= 2) {
-      const team1 = currentQueue.currentQueue[0];
-      const team2 = currentQueue.currentQueue[1];
-      const nextTeam = currentQueue.currentQueue[2];
-      
-      currentGameEl.innerHTML = `
-        <div class="grid grid-cols-2 gap-4">
-          <div class="text-center p-4 bg-blue-100 dark:bg-blue-900 rounded-lg">
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Team 1</p>
-            <p class="text-xl font-bold text-gray-900 dark:text-white">${team1}</p>
-          </div>
-          <div class="text-center p-4 bg-red-100 dark:bg-red-900 rounded-lg">
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Team 2</p>
-            <p class="text-xl font-bold text-gray-900 dark:text-white">${team2}</p>
-          </div>
-        </div>
         
-        ${nextTeam ? `
-          <div class="text-center text-sm text-gray-600 dark:text-gray-400">
-            Nächstes Team: <span class="font-medium text-gray-900 dark:text-white">${nextTeam}</span>
-          </div>
-        ` : ''}
-        
-        <div class="flex gap-3 mt-4">
-          <button
-            class="winner-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
-            data-loser="${team2}"
-          >
-            ${team1} gewinnt
-          </button>
-          <button
-            class="winner-btn flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition"
-            data-loser="${team1}"
-          >
-            ${team2} gewinnt
-          </button>
-        </div>
-      `;
-      
-      // Event Listener für Winner Buttons
-      document.querySelectorAll('.winner-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const loser = (e.currentTarget as HTMLElement).dataset.loser!;
-          await handleNextGame(loser);
+        // Event Listener für Winner Buttons
+        document.querySelectorAll('.winner-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const loser = (e.currentTarget as HTMLElement).dataset.loser!;
+            await handleNextGame(loser);
+          });
         });
-      });
-    } else {
-      currentGameEl.innerHTML = `
-        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-          <p>Kein aktives Spiel</p>
-          <p class="text-sm mt-2">Mindestens 2 Teams erforderlich</p>
-        </div>
-      `;
-    }
-  };
-
-  // Team hinzufügen
-  const handleAddTeam = async (teamName: string) => {
-    if (!teamName.trim()) return;
-    
-    try {
-      await addTeamToQueue(standort, tisch, teamName);
-      teamNameInput.value = '';
-    } catch (error) {
-      console.error('Fehler beim Hinzufügen:', error);
-      // Lokales Update als Fallback
-      if (currentQueue) {
-        currentQueue.currentQueue.push(teamName);
-        if (!currentQueue.recentTeams.includes(teamName)) {
-          currentQueue.recentTeams = [teamName, ...currentQueue.recentTeams].slice(0, 8);
-        }
-        updateUI();
+      } else {
+        currentGameEl.innerHTML = `
+          <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+            <p>Kein aktives Spiel</p>
+            <p class="text-sm mt-2">Mindestens 2 Teams erforderlich</p>
+          </div>
+        `;
       }
-    }
-  };
+    };
 
-  // Team entfernen
-  const handleRemoveTeam = async (teamName: string) => {
-    try {
-      await removeTeamFromQueue(standort, tisch, teamName);
-    } catch (error) {
-      console.error('Fehler beim Entfernen:', error);
-      // Lokales Update als Fallback
-      if (currentQueue) {
-        currentQueue.currentQueue = currentQueue.currentQueue.filter(t => t !== teamName);
-        updateUI();
-      }
-    }
-  };
-
-  // Nächstes Spiel
-  const handleNextGame = async (loserTeam: string) => {
-    try {
-      await nextGame(standort, tisch, loserTeam);
-    } catch (error) {
-      console.error('Fehler beim Spielwechsel:', error);
-      // Lokales Update als Fallback
-      if (currentQueue) {
-        currentQueue.currentQueue = currentQueue.currentQueue.filter(t => t !== loserTeam);
-        updateUI();
-      }
-    }
-  };
-
-  // Event Listeners
-  addTeamForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await handleAddTeam(teamNameInput.value);
-  });
-
-  clearQueueBtn.addEventListener('click', async () => {
-    if (confirm('Wirklich alle Teams aus der Warteschlange entfernen?')) {
+    // Team hinzufügen
+    const handleAddTeam = async (teamName: string) => {
+      if (!teamName.trim()) return;
+      
       try {
-        await clearQueue(standort, tisch);
+        await addTeamToQueue(standort, tisch, teamName);
+        teamNameInput.value = '';
       } catch (error) {
-        console.error('Fehler beim Leeren:', error);
+        console.error('Fehler beim Hinzufügen:', error);
         // Lokales Update als Fallback
         if (currentQueue) {
-          currentQueue.currentQueue = [];
+          currentQueue.currentQueue.push(teamName);
+          if (!currentQueue.recentTeams.includes(teamName)) {
+            currentQueue.recentTeams = [teamName, ...currentQueue.recentTeams].slice(0, 8);
+          }
           updateUI();
         }
       }
-    }
-  });
+    };
 
-  // Auth State Listener
-  onAuthChange((user) => {
-    currentUser = user;
-    if (!user && !checkAuth()) {
-      authSection.classList.remove('hidden');
-    } else {
-      authSection.classList.add('hidden');
+    // Team entfernen
+    const handleRemoveTeam = async (teamName: string) => {
+      try {
+        await removeTeamFromQueue(standort, tisch, teamName);
+      } catch (error) {
+        console.error('Fehler beim Entfernen:', error);
+        // Lokales Update als Fallback
+        if (currentQueue) {
+          currentQueue.currentQueue = currentQueue.currentQueue.filter(t => t !== teamName);
+          updateUI();
+        }
+      }
+    };
+
+    // Nächstes Spiel
+    const handleNextGame = async (loserTeam: string) => {
+      try {
+        await nextGame(standort, tisch, loserTeam);
+      } catch (error) {
+        console.error('Fehler beim Spielwechsel:', error);
+        // Lokales Update als Fallback
+        if (currentQueue) {
+          currentQueue.currentQueue = currentQueue.currentQueue.filter(t => t !== loserTeam);
+          updateUI();
+        }
+      }
+    };
+
+    // Event Listeners
+    addTeamForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await handleAddTeam(teamNameInput.value);
+    });
+
+    clearQueueBtn.addEventListener('click', async () => {
+      if (confirm('Wirklich alle Teams aus der Warteschlange entfernen?')) {
+        try {
+          await clearQueue(standort, tisch);
+        } catch (error) {
+          console.error('Fehler beim Leeren:', error);
+          // Lokales Update als Fallback
+          if (currentQueue) {
+            currentQueue.currentQueue = [];
+            updateUI();
+          }
+        }
+      }
+    });
+
+    // Auth State Listener
+    onAuthChange((user) => {
+      currentUser = user;
+      if (!user && !checkAuth()) {
+        authSection.classList.remove('hidden');
+      } else {
+        authSection.classList.add('hidden');
+        initQueue();
+      }
+    });
+
+    // Initialisierung
+    if (checkAuth()) {
       initQueue();
+    } else {
+      authSection.classList.remove('hidden');
     }
-  });
 
-  // Initialisierung
-  if (checkAuth()) {
-    initQueue();
-  } else {
-    authSection.classList.remove('hidden');
+    // Cleanup
+    window.addEventListener('beforeunload', () => {
+      if (unsubscribe) unsubscribe();
+    });
   }
-
-  // Cleanup
-  window.addEventListener('beforeunload', () => {
-    if (unsubscribe) unsubscribe();
-  });
 </script>
