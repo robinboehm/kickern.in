@@ -4,7 +4,13 @@ import QueueManager from '../../components/QueueManager.astro';
 import QueueViewer from '../../components/QueueViewer.astro';
 import type { GetStaticPaths } from 'astro';
 
-export const getStaticPaths: GetStaticPaths = () => [];
+export const getStaticPaths: GetStaticPaths = () => {
+  return [
+    { params: { standort: 'platzwart', tisch: 'leo' } },
+    { params: { standort: 'biergarten-muenchen', tisch: 'tisch-1' } },
+    { params: { standort: 'sports-bar-berlin', tisch: 'haupttisch' } }
+  ];
+};
 
 const params = (typeof Astro !== 'undefined' ? (Astro.params as { standort?: string; tisch?: string }) : {}) as { standort?: string; tisch?: string };
 const standort = params.standort;
