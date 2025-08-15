@@ -1,0 +1,189 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Kickern.in - Warteschlangen-Management">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Header -->
+    <header class="text-center mb-12">
+      <h1 class="text-5xl font-bold text-gray-900 dark:text-white mb-4">
+        kickern.in
+      </h1>
+      <p class="text-xl text-gray-600 dark:text-gray-400">
+        Warteschlangen-Management für Kickertische
+      </p>
+    </header>
+
+    <!-- Direkt-Zugriff -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+        Direkt zu deinem Tisch
+      </h2>
+      <form id="directAccessForm" class="space-y-4">
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label for="standort" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Standort
+            </label>
+            <input
+              type="text"
+              id="standort"
+              name="standort"
+              placeholder="z.B. Biergarten München"
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label for="tisch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tisch
+            </label>
+            <input
+              type="text"
+              id="tisch"
+              name="tisch"
+              placeholder="z.B. Tisch 1"
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <button
+            type="submit"
+            data-mode="view"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+          >
+            Als Gast ansehen
+          </button>
+          <button
+            type="submit"
+            data-mode="manage"
+            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+          >
+            Als Manager verwalten
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Aktive Standorte -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+      <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
+        Aktive Standorte (letzte 3 Stunden)
+      </h2>
+      <div id="activeLocations" class="space-y-4">
+        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+          <svg class="animate-spin h-8 w-8 mx-auto mb-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Lade aktive Standorte...
+        </div>
+      </div>
+    </div>
+
+    <!-- Info-Bereich -->
+    <div class="mt-12 grid md:grid-cols-3 gap-6">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="text-blue-600 mb-4">
+          <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Für Spieler</h3>
+        <p class="text-gray-600 dark:text-gray-400">
+          Trage dein Team in die Warteschlange ein und sehe, wann du dran bist.
+        </p>
+      </div>
+      
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="text-green-600 mb-4">
+          <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Für Manager</h3>
+        <p class="text-gray-600 dark:text-gray-400">
+          Verwalte die Warteschlange, markiere Gewinner und organisiere Spiele.
+        </p>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="text-purple-600 mb-4">
+          <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Echtzeit-Updates</h3>
+        <p class="text-gray-600 dark:text-gray-400">
+          Alle Änderungen werden sofort auf allen Geräten synchronisiert.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Formular-Handler
+    const form = document.getElementById('directAccessForm') as HTMLFormElement;
+    const buttons = form.querySelectorAll('button[type="submit"]');
+    
+    buttons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const mode = (e.target as HTMLButtonElement).dataset.mode;
+        const standort = (form.elements.namedItem('standort') as HTMLInputElement).value.trim();
+        const tisch = (form.elements.namedItem('tisch') as HTMLInputElement).value.trim();
+        
+        if (standort && tisch) {
+          const standortSlug = standort.toLowerCase().replace(/\s+/g, '-');
+          const tischSlug = tisch.toLowerCase().replace(/\s+/g, '-');
+          const url = `/${standortSlug}/${tischSlug}${mode === 'manage' ? '?manage=true' : ''}`;
+          window.location.href = url;
+        }
+      });
+    });
+
+    // Aktive Standorte laden (simuliert - später mit Firebase)
+    setTimeout(() => {
+      const locationsDiv = document.getElementById('activeLocations');
+      if (locationsDiv) {
+        // Beispiel-Daten - später durch echte Firebase-Daten ersetzen
+        const mockLocations = [
+          { standort: 'Biergarten München', tische: ['Tisch 1', 'Tisch 2'], lastActivity: new Date() },
+          { standort: 'Sports Bar Berlin', tische: ['Haupttisch'], lastActivity: new Date(Date.now() - 1800000) }
+        ];
+
+        if (mockLocations.length === 0) {
+          locationsDiv.innerHTML = `
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+              <p>Aktuell keine aktiven Standorte</p>
+            </div>
+          `;
+        } else {
+          locationsDiv.innerHTML = mockLocations.map(location => {
+            const timeAgo = Math.floor((Date.now() - location.lastActivity.getTime()) / 60000);
+            return `
+              <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  ${location.standort}
+                </h3>
+                <div class="flex flex-wrap gap-2 mb-3">
+                  ${location.tische.map(tisch => `
+                    <a href="/${location.standort.toLowerCase().replace(/\s+/g, '-')}/${tisch.toLowerCase().replace(/\s+/g, '-')}" 
+                       class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm hover:bg-blue-200 dark:hover:bg-blue-800 transition">
+                      ${tisch}
+                    </a>
+                  `).join('')}
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Zuletzt aktiv: vor ${timeAgo} Minuten
+                </p>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }, 1000);
+  </script>
+</Layout>
