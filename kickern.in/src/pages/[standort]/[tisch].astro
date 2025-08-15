@@ -1,0 +1,67 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import QueueManager from '../../components/QueueManager.astro';
+import QueueViewer from '../../components/QueueViewer.astro';
+
+const { standort, tisch } = Astro.params;
+const isManageMode = Astro.url.searchParams.has('manage');
+
+// Formatiere Standort und Tisch für Anzeige
+const standortDisplay = standort?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+const tischDisplay = tisch?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+---
+
+<Layout title={`${standortDisplay} - ${tischDisplay}`}>
+  <div class="container mx-auto px-4 py-6 max-w-4xl">
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <a href="/" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Zurück zur Übersicht
+        </a>
+        {!isManageMode && (
+          <a 
+            href={`?manage=true`}
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition"
+          >
+            Manager-Modus
+          </a>
+        )}
+      </div>
+      
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          {standortDisplay}
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-400">
+          {tischDisplay}
+        </p>
+        {isManageMode && (
+          <div class="mt-4 inline-flex items-center gap-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            Manager-Modus
+          </div>
+        )}
+      </div>
+    </header>
+
+    <!-- Warteschlangen-Komponente -->
+    {isManageMode ? (
+      <QueueManager standort={standort!} tisch={tisch!} />
+    ) : (
+      <QueueViewer standort={standort!} tisch={tisch!} />
+    )}
+  </div>
+
+  <script>
+    // Prüfe ob Firebase konfiguriert ist
+    if (!import.meta.env.PUBLIC_FIREBASE_API_KEY) {
+      console.warn('Firebase ist noch nicht konfiguriert. Bitte füge die Firebase-Konfiguration in die .env-Datei ein.');
+    }
+  </script>
+</Layout>
