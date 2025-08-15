@@ -2,13 +2,23 @@
 import Layout from '../../layouts/Layout.astro';
 import QueueManager from '../../components/QueueManager.astro';
 import QueueViewer from '../../components/QueueViewer.astro';
+import type { GetStaticPaths } from 'astro';
 
-const { standort, tisch } = Astro.params;
-const isManageMode = Astro.url.searchParams.has('manage');
+export const getStaticPaths: GetStaticPaths = () => [];
+
+const params = (typeof Astro !== 'undefined' ? (Astro.params as { standort?: string; tisch?: string }) : {}) as { standort?: string; tisch?: string };
+const standort = params.standort;
+const tisch = params.tisch;
+const isManageMode = typeof Astro !== 'undefined' ? Astro.url.searchParams.has('manage') : false;
+
+const formatDisplay = (value: string | undefined): string => {
+  if (!value) return '';
+  return value.replace(/-/g, ' ').replace(/\b\w/g, (ch: string) => ch.toUpperCase());
+};
 
 // Formatiere Standort und Tisch für Anzeige
-const standortDisplay = standort?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-const tischDisplay = tisch?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+const standortDisplay: string = formatDisplay(standort);
+const tischDisplay: string = formatDisplay(tisch);
 ---
 
 <Layout title={`${standortDisplay} - ${tischDisplay}`}>
