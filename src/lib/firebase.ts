@@ -4,12 +4,12 @@ import { getFirestore } from 'firebase/firestore';
 
 // Firebase-Konfiguration - Diese Werte müssen durch echte Werte ersetzt werden
 const firebaseConfig = {
-  apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
-  authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.PUBLIC_FIREBASE_APP_ID
+  apiKey: "AIzaSyDB4ULFPbiWLxjU_DjpLKIyGWzhTB3slJc",
+  authDomain: "kickern-in-8b5d3.firebaseapp.com",
+  projectId: "kickern-in-8b5d3",
+  storageBucket: "kickern-in-8b5d3.firebasestorage.app",
+  messagingSenderId: "221752279600",
+  appId: "1:221752279600:web:c5dee12791df41b6a4a3f5"
 };
 
 // Firebase initialisieren
